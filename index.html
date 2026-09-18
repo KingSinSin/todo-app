@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘의 할 일</title>
+  <style>
+    /* 기본 색상과 공통 변수 */
+    :root {
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --text: #20242b;
+      --muted: #7a808a;
+      --line: #e5e7eb;
+      --primary: #20242b;
+      --important: #f59e0b;
+      --danger: #dc2626;
+      --shadow: 0 8px 28px rgba(20, 24, 30, 0.07);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+        "Noto Sans KR", "Malgun Gothic", sans-serif;
+      line-height: 1.5;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      letter-spacing: -0.04em;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 700;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 16px rgba(20, 24, 30, .08);
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* 오늘을 가장 크게 배치 */
+    .today-section,
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .today-section {
+      padding: 24px;
+      min-height: 390px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      letter-spacing: -0.03em;
+    }
+
+    .section-heading .date {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    /* 오늘의 진행 상황 */
+    .progress {
+      height: 7px;
+      background: #eef0f2;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: var(--primary);
+      border-radius: inherit;
+      transition: width .2s ease;
+    }
+
+    /* 할 일 목록 */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .task {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 11px;
+      padding: 12px 10px;
+      border-radius: 12px;
+      transition: background .15s ease;
+    }
+
+    .task:hover {
+      background: #f8f9fa;
+    }
+
+    .check {
+      width: 21px;
+      height: 21px;
+      border: 1.5px solid #b8bdc5;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      flex: none;
+    }
+
+    .check.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .check.checked::after {
+      content: "✓";
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .task-title {
+      min-width: 0;
+      font-size: 1rem;
+      overflow-wrap: anywhere;
+    }
+
+    .task.completed .task-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: .78rem;
+      white-space: nowrap;
+    }
+
+    .star {
+      border: 0;
+      background: transparent;
+      padding: 3px;
+      font-size: 1.05rem;
+      color: #b9bec6;
+    }
+
+    .star.important {
+      color: var(--important);
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 3px;
+      opacity: .15;
+      transition: opacity .15s ease;
+    }
+
+    .task:hover .task-actions,
+    .task:focus-within .task-actions {
+      opacity: 1;
+    }
+
+    .icon-btn {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 4px 6px;
+      border-radius: 7px;
+    }
+
+    .icon-btn:hover {
+      background: #eef0f2;
+      color: var(--text);
+    }
+
+    /* 이번 주 / 올해 영역 */
+    .lower-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .panel {
+      padding: 20px;
+      min-height: 250px;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 24px 8px;
+      text-align: center;
+      font-size: .92rem;
+    }
+
+    .deadline {
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: .78rem;
+      margin-top: 3px;
+    }
+
+    /* 하단 보조 네비게이션 */
+    .subnav {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    /* 모달 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 18, 22, .45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 20;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(460px, 100%);
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+    }
+
+    .modal h3 {
+      margin: 0 0 18px;
+      font-size: 1.25rem;
+    }
+
+    .field {
+      margin-bottom: 15px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: .86rem;
+      font-weight: 700;
+    }
+
+    .field input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 11px 12px;
+      outline: none;
+      background: #fff;
+    }
+
+    /* Safari에서 날짜/시간 입력창의 네이티브 컨트롤이 살짝 넘치는 현상을 보정 */
+    .field input[type="date"],
+    .field input[type="time"] {
+      width: calc(100% - 4px);
+      max-width: calc(100% - 4px);
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 11px 10px;
+      outline: none;
+      background: #fff;
+    }
+
+    .field input:focus {
+      border-color: #9da3ad;
+      box-shadow: 0 0 0 3px rgba(80, 90, 105, .08);
+    }
+
+    .important-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      user-select: none;
+    }
+
+    .important-row input {
+      width: 18px;
+      height: 18px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    /* 완료 목록과 기한 없음 페이지 */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .back {
+      margin-bottom: 14px;
+    }
+
+    .completed-date {
+      color: var(--muted);
+      font-size: .84rem;
+      font-weight: 700;
+      margin: 20px 0 8px;
+    }
+
+    /* 작은 화면에서는 세로로 배치 */
+    @media (max-width: 700px) {
+      .app {
+        width: min(100% - 20px, 680px);
+        padding-top: 18px;
+      }
+
+      .header {
+        align-items: flex-start;
+      }
+
+      .header-actions {
+        max-width: 50%;
+      }
+
+      .btn {
+        padding: 9px 11px;
+        font-size: .85rem;
+      }
+
+      .today-section {
+        padding: 18px 14px;
+        min-height: 330px;
+      }
+
+      .lower-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        min-height: 220px;
+      }
+
+      .task {
+        grid-template-columns: auto 1fr;
+        padding: 11px 5px;
+      }
+
+      .task-meta,
+      .task-actions {
+        grid-column: 2;
+      }
+
+      .task-meta {
+        justify-content: flex-start;
+      }
+
+      .task-actions {
+        position: absolute;
+        right: 10px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .header {
+        flex-direction: column;
+      }
+
+      .header-actions {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .header-actions .btn {
+        flex: 1;
+      }
+
+      .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div id="dashboardPage" class="page active">
+      <header class="header">
+        <div class="brand">
+          <h1>할 일 관리</h1>
+          <p id="todaySummary">오늘 중요한 일을 놓치지 않도록</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn" onclick="openPage('noDuePage')">기한 없음</button>
+          <button class="btn" onclick="openPage('completedPage')">완료 목록</button>
+          <button class="btn primary" onclick="openTaskModal()">+ 할 일 추가</button>
+        </div>
+      </header>
+
+      <section class="today-section">
+        <div class="section-heading">
+          <div>
+            <h2>오늘</h2>
+            <div class="section-note">오늘 날짜에 도달한 일과 오늘 처리할 일을 보여줍니다.</div>
+          </div>
+          <div class="date" id="todayDate"></div>
+        </div>
+        <div class="progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="todayList" class="task-list"></div>
+      </section>
+
+      <div class="lower-grid">
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <h2>이번 주</h2>
+              <div class="section-note">월요일부터 일요일까지</div>
+            </div>
+            <div class="date" id="weekRange"></div>
+          </div>
+          <div id="weekList" class="task-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <h2>올해</h2>
+              <div class="section-note">현재 연도 안에 해야 할 일</div>
+            </div>
+            <div class="date" id="yearLabel"></div>
+          </div>
+          <div id="yearList" class="task-list"></div>
+        </section>
+      </div>
+    </div>
+
+    <div id="noDuePage" class="page">
+      <button class="btn back" onclick="openPage('dashboardPage')">← 메인으로</button>
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <h2>기한 없음</h2>
+            <div class="section-note">날짜를 정하지 않은 일을 관리합니다.</div>
+          </div>
+        </div>
+        <div id="noDueList" class="task-list"></div>
+      </section>
+    </div>
+
+    <div id="completedPage" class="page">
+      <button class="btn back" onclick="openPage('dashboardPage')">← 메인으로</button>
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <h2>완료 목록</h2>
+            <div class="section-note">완료한 일을 날짜별로 확인합니다.</div>
+          </div>
+        </div>
+        <div id="completedList"></div>
+      </section>
+    </div>
+  </main>
+
+  <div id="taskModal" class="modal-backdrop" onclick="handleBackdrop(event)">
+    <div class="modal">
+      <h3 id="modalTitle">할 일 추가</h3>
+
+      <div class="field">
+        <label for="taskTitle">할 일</label>
+        <input id="taskTitle" type="text" maxlength="200" placeholder="예: 병원 예약하기" />
+      </div>
+
+      <div class="field">
+        <label for="taskDate">마감일</label>
+        <input id="taskDate" type="date" />
+        <div class="section-note">날짜를 비워두면 '기한 없음'으로 관리됩니다.</div>
+      </div>
+
+      <div class="field">
+        <label for="taskTime">시간</label>
+        <input id="taskTime" type="time" />
+        <div class="section-note">필요한 경우 해야 할 시간을 지정할 수 있습니다.</div>
+      </div>
+
+      <div class="field">
+        <label class="important-row">
+          <input id="taskImportant" type="checkbox" />
+          <span>중요한 일</span>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn" onclick="closeTaskModal()">취소</button>
+        <button class="btn primary" onclick="saveTask()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*
+      이 예제는 HTML/CSS/JavaScript만 사용하는 단일 파일 MVP입니다.
+      실제 Google 로그인과 서버 저장, 모바일 푸시는 별도의 백엔드/인증 서비스가 필요합니다.
+      현재 데이터는 브라우저의 localStorage에 저장됩니다.
+    */
+
+    const STORAGE_KEY = "personal-todo-mvp-v1";
+    let tasks = loadTasks();
+    let editingTaskId = null;
+
+    function loadTasks() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function dateOnly(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function toDateString(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const [y, m, d] = value.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function startOfWeek(date) {
+      // 월요일을 한 주의 시작으로 사용합니다.
+      const d = dateOnly(date);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      return d;
+    }
+
+    function endOfWeek(date) {
+      const d = startOfWeek(date);
+      d.setDate(d.getDate() + 6);
+      return d;
+    }
+
+    function isSameDay(a, b) {
+      return a && b && toDateString(a) === toDateString(b);
+    }
+
+    function isWithinWeek(date, base) {
+      if (!date) return false;
+      const start = startOfWeek(base);
+      const end = endOfWeek(base);
+      return date >= start && date <= end;
+    }
+
+    function isWithinYear(date, base) {
+      return date && date.getFullYear() === base.getFullYear();
+    }
+
+    function formatDate(date, includeYear = false) {
+      if (!date) return "";
+      return date.toLocaleDateString("ko-KR", {
+        year: includeYear ? "numeric" : undefined,
+        month: "long",
+        day: "numeric",
+        weekday: "short"
+      });
+    }
+
+    function formatShortDate(date) {
+      if (!date) return "";
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+
+    function formatTime(time) {
+      if (!time) return "";
+      const [hour, minute] = time.split(":").map(Number);
+      const period = hour < 12 ? "오전" : "오후";
+      const h = hour % 12 || 12;
+      return `${period} ${h}:${String(minute).padStart(2, "0")}`;
+    }
+
+    function sortTasks(list) {
+      // 중요 항목을 먼저 배치하고, 같은 중요도에서는 마감일이 빠른 순으로 정렬합니다.
+      return [...list].sort((a, b) => {
+        if (a.isImportant !== b.isImportant) return a.isImportant ? -1 : 1;
+
+        const ad = a.dueDate ? parseDate(a.dueDate).getTime() : Infinity;
+        const bd = b.dueDate ? parseDate(b.dueDate).getTime() : Infinity;
+
+        if (ad !== bd) return ad - bd;
+
+        // 같은 날짜라면 시간이 빠른 일부터 보여줍니다.
+        if (a.dueTime !== b.dueTime) {
+          if (!a.dueTime) return 1;
+          if (!b.dueTime) return -1;
+          return a.dueTime.localeCompare(b.dueTime);
+        }
+
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
+    }
+
+    function activeTasks(list) {
+      // 오늘 완료한 일은 오늘 화면에 남겨야 하므로, 완료 여부로 일괄 제거하지 않습니다.
+      return list;
+    }
+
+    function render() {
+      const today = dateOnly(new Date());
+
+      document.getElementById("todayDate").textContent = formatDate(today);
+      document.getElementById("yearLabel").textContent = `${today.getFullYear()}년`;
+      document.getElementById("weekRange").textContent =
+        `${formatShortDate(startOfWeek(today))} – ${formatShortDate(endOfWeek(today))}`;
+
+      const todayTasks = tasks.filter(t => {
+        if (!t.dueDate) return false;
+        const due = parseDate(t.dueDate);
+
+        // 완료된 과거 일정은 메인에서 숨기고 완료 목록으로 보냅니다.
+        if (t.completed && !isSameDay(due, today)) return false;
+
+        // 오늘 날짜가 된 일은 오늘 영역으로 이동합니다.
+        return isSameDay(due, today);
+      });
+
+      const weekTasks = tasks.filter(t => {
+        if (!t.dueDate || t.completed) return false;
+        const due = parseDate(t.dueDate);
+
+        // 오늘에 해당하는 일은 오늘 영역에서만 표시합니다.
+        return isWithinWeek(due, today) && !isSameDay(due, today);
+      });
+
+      const yearTasks = tasks.filter(t => {
+        if (!t.dueDate || t.completed) return false;
+        const due = parseDate(t.dueDate);
+
+        // 이번 주에 들어온 일은 이번 주 영역으로 넘어갑니다.
+        return isWithinYear(due, today) && !isWithinWeek(due, today);
+      });
+
+      renderTaskList("todayList", sortTasks(todayTasks), true);
+      renderTaskList("weekList", sortTasks(weekTasks), true);
+      renderTaskList("yearList", sortTasks(yearTasks), true);
+
+      renderNoDue();
+      renderCompleted();
+      renderProgress(todayTasks);
+    }
+
+    function renderTaskList(elementId, list, showDate) {
+      const el = document.getElementById(elementId);
+
+      if (!list.length) {
+        el.innerHTML = '<div class="empty">등록된 할 일이 없습니다.</div>';
+        return;
+      }
+
+      el.innerHTML = list.map(task => taskHTML(task, showDate)).join("");
+    }
+
+    function taskHTML(task, showDate) {
+      const due = task.dueDate ? parseDate(task.dueDate) : null;
+
+      return `
+        <div class="task ${task.completed ? "completed" : ""}" data-id="${task.id}">
+          <button
+            class="check ${task.completed ? "checked" : ""}"
+            aria-label="${task.completed ? "완료 취소" : "완료"}"
+            onclick="toggleTask('${task.id}')"
+          ></button>
+
+          <div class="task-title">${escapeHTML(task.title)}</div>
+
+          <div class="task-meta">
+            ${showDate && due ? `<span class="deadline">${formatShortDate(due)}${task.dueTime ? ` · ${formatTime(task.dueTime)}` : ""}</span>` : ""}
+            <button
+              class="star ${task.isImportant ? "important" : ""}"
+              aria-label="중요 표시"
+              onclick="toggleImportant('${task.id}')"
+              title="중요 표시"
+            >${task.isImportant ? "★" : "☆"}</button>
+            <div class="task-actions">
+              <button class="icon-btn" onclick="openTaskModal('${task.id}')" title="수정">수정</button>
+              <button class="icon-btn" onclick="deleteTask('${task.id}')" title="삭제">삭제</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderNoDue() {
+      const list = sortTasks(tasks.filter(t => !t.dueDate && !t.completed));
+      renderTaskList("noDueList", list, false);
+    }
+
+    function renderCompleted() {
+      const el = document.getElementById("completedList");
+      const completed = tasks
+        .filter(t => t.completed)
+        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+      if (!completed.length) {
+        el.innerHTML = '<div class="empty">완료한 일이 없습니다.</div>';
+        return;
+      }
+
+      // 완료 목록은 완료된 날짜를 기준으로 묶습니다.
+      const groups = {};
+      completed.forEach(task => {
+        const key = new Date(task.completedAt).toLocaleDateString("ko-KR");
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(task);
+      });
+
+      el.innerHTML = Object.entries(groups).map(([date, list]) => `
+        <div class="completed-date">${date}</div>
+        <div class="task-list">
+          ${list.map(task => taskHTML(task, false)).join("")}
+        </div>
+      `).join("");
+    }
+
+    function renderProgress(todayTasks) {
+      const total = todayTasks.length;
+      const done = todayTasks.filter(t => t.completed).length;
+      const percent = total ? Math.round(done / total * 100) : 0;
+      document.getElementById("progressBar").style.width = `${percent}%`;
+    }
+
+    function toggleTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+
+      task.completed = !task.completed;
+      task.completedAt = task.completed ? new Date().toISOString() : null;
+
+      saveTasks();
+      render();
+    }
+
+    function toggleImportant(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+
+      task.isImportant = !task.isImportant;
+      saveTasks();
+      render();
+    }
+
+    function deleteTask(id) {
+      if (!confirm("이 할 일을 삭제할까요?")) return;
+      tasks = tasks.filter(t => t.id !== id);
+      saveTasks();
+      render();
+    }
+
+    function openTaskModal(id = null) {
+      editingTaskId = id;
+      const modal = document.getElementById("taskModal");
+      const title = document.getElementById("taskTitle");
+      const date = document.getElementById("taskDate");
+      const important = document.getElementById("taskImportant");
+
+      if (id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+
+        document.getElementById("modalTitle").textContent = "할 일 수정";
+        title.value = task.title;
+        date.value = task.dueDate || "";
+        document.getElementById("taskTime").value = task.dueTime || "";
+        important.checked = task.isImportant;
+      } else {
+        document.getElementById("modalTitle").textContent = "할 일 추가";
+        title.value = "";
+        date.value = "";
+        document.getElementById("taskTime").value = "";
+        important.checked = false;
+      }
+
+      modal.classList.add("open");
+      setTimeout(() => title.focus(), 0);
+    }
+
+    function closeTaskModal() {
+      document.getElementById("taskModal").classList.remove("open");
+      editingTaskId = null;
+    }
+
+    function handleBackdrop(event) {
+      if (event.target.id === "taskModal") closeTaskModal();
+    }
+
+    function saveTask() {
+      const title = document.getElementById("taskTitle").value.trim();
+      const dueDate = document.getElementById("taskDate").value;
+      const dueTime = document.getElementById("taskTime").value;
+      const isImportant = document.getElementById("taskImportant").checked;
+
+      if (!title) {
+        alert("할 일을 입력해주세요.");
+        return;
+      }
+
+      if (editingTaskId) {
+        const task = tasks.find(t => t.id === editingTaskId);
+        if (task) {
+          task.title = title;
+          task.dueDate = dueDate || null;
+          task.dueTime = dueTime || null;
+          task.isImportant = isImportant;
+          task.updatedAt = new Date().toISOString();
+        }
+      } else {
+        tasks.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          title,
+          dueDate: dueDate || null,
+          dueTime: dueTime || null,
+          isImportant,
+          completed: false,
+          completedAt: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      saveTasks();
+      closeTaskModal();
+      render();
+    }
+
+    function openPage(pageId) {
+      document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
+      document.getElementById(pageId).classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function escapeHTML(value) {
+      // 사용자가 입력한 문자열을 HTML로 해석하지 않도록 안전하게 변환합니다.
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // Enter 키로 빠르게 저장할 수 있도록 합니다.
+    document.getElementById("taskTitle").addEventListener("keydown", event => {
+      if (event.key === "Enter") saveTask();
+    });
+
+    render();
+  </script>
+</body>
+</html>
