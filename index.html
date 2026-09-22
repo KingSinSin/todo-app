@@ -67,9 +67,55 @@
 
     .header-actions {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
+      align-items: center;
       justify-content: flex-end;
+    }
+
+    .lunch-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto auto;
+      align-items: center;
+      column-gap: 8px;
+      row-gap: 1px;
+      min-width: 190px;
+      padding: 8px 34px 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .lunch-card-label {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: .68rem;
+      line-height: 1.2;
+    }
+
+    .lunch-card-menu {
+      font-size: .86rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .lunch-refresh {
+      position: absolute;
+      right: 7px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 1.05rem;
+      padding: 4px;
+      border-radius: 7px;
+    }
+
+    .lunch-refresh:hover {
+      background: #eef0f2;
+      color: var(--text);
     }
 
     .btn {
@@ -111,8 +157,8 @@
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 18px;
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
     .section-heading h2 {
@@ -124,6 +170,75 @@
     .section-heading .date {
       color: var(--muted);
       font-size: .9rem;
+    }
+
+    .today-date-input {
+      border: 0;
+      background: transparent;
+      padding: 4px 7px;
+      border-radius: 8px;
+      cursor: pointer;
+      font: inherit;
+      color: var(--muted);
+      min-width: 145px;
+    }
+
+    .today-date-controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .today-reset-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: .72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .today-reset-btn:hover {
+      background: #eef0f2;
+      color: var(--text);
+    }
+
+    .today-date-input:hover {
+      background: #eef0f2;
+    }
+
+    .deadline-date-input {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: .78rem;
+      padding: 2px 3px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 88px;
+      max-width: 88px;
+      font-size: .72rem;
+      padding: 2px 1px;
+    }
+
+    .deadline-date-input:hover {
+      background: #eef0f2;
+      color: var(--text);
+    }
+
+    .deadline-time {
+      white-space: nowrap;
+    }
+
+    .deadline-label {
+      color: var(--muted);
+      font-size: .7rem;
+      white-space: nowrap;
+      line-height: 1.2;
     }
 
     /* 오늘의 진행 상황 */
@@ -194,7 +309,6 @@
     }
 
     .task.completed .task-title {
-      text-decoration: line-through;
       color: var(--muted);
     }
 
@@ -247,13 +361,27 @@
     /* 이번 주 / 올해 영역 */
     .lower-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 18px;
       margin-top: 18px;
     }
 
+    .today-section {
+      margin-bottom: 18px;
+    }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    .top-grid .panel {
+      min-height: 390px;
+    }
+
     .panel {
-      padding: 20px;
+      padding: 18px;
       min-height: 250px;
     }
 
@@ -267,6 +395,11 @@
     .deadline {
       color: var(--muted);
       font-size: .78rem;
+    }
+
+    .date-edit-btn:hover {
+      background: #eef0f2;
+      color: var(--text);
     }
 
     .section-note {
@@ -400,7 +533,16 @@
       }
 
       .header-actions {
-        max-width: 50%;
+        max-width: 62%;
+      }
+
+      .lunch-card {
+        min-width: 175px;
+      }
+
+      .deadline-date-input {
+        width: 82px;
+        max-width: 82px;
       }
 
       .btn {
@@ -413,10 +555,12 @@
         min-height: 330px;
       }
 
+      .top-grid,
       .lower-grid {
         grid-template-columns: 1fr;
       }
 
+      .top-grid .panel,
       .panel {
         min-height: 220px;
       }
@@ -451,8 +595,13 @@
         width: 100%;
       }
 
-      .header-actions .btn {
+      .lunch-card {
         flex: 1;
+        min-width: 0;
+      }
+
+      .header-actions .btn {
+        flex: 0 0 auto;
       }
 
       .section-heading {
@@ -471,27 +620,33 @@
           <p id="todaySummary">오늘 중요한 일을 놓치지 않도록</p>
         </div>
         <div class="header-actions">
-          <button class="btn" onclick="openPage('noDuePage')">기한 없음</button>
-          <button class="btn" onclick="openPage('completedPage')">완료 목록</button>
+          <div class="lunch-card">
+            <div class="lunch-card-label">오늘 점심 추천</div>
+            <div class="lunch-card-menu" id="lunchMenu">메뉴를 골라볼까요?</div>
+            <button class="lunch-refresh" onclick="recommendLunch()" title="다른 메뉴 추천">↻</button>
+          </div>
           <button class="btn primary" onclick="openTaskModal()">+ 할 일 추가</button>
         </div>
       </header>
 
-      <section class="today-section">
-        <div class="section-heading">
-          <div>
-            <h2>오늘</h2>
-            <div class="section-note">오늘 날짜에 도달한 일과 오늘 처리할 일을 보여줍니다.</div>
+      <div class="top-grid">
+        <section class="today-section">
+          <div class="section-heading">
+            <div>
+              <h2>오늘</h2>
+              <div class="section-note">조회할 날짜를 선택할 수 있습니다.</div>
+            </div>
+            <div class="today-date-controls">
+              <input class="date today-date-input" id="todayDate" type="date" aria-label="조회할 날짜 선택" />
+              <button class="today-reset-btn" onclick="resetToToday()" title="오늘 날짜로 돌아가기">오늘</button>
+            </div>
           </div>
-          <div class="date" id="todayDate"></div>
-        </div>
-        <div class="progress">
-          <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div id="todayList" class="task-list"></div>
-      </section>
+          <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <div id="todayList" class="task-list"></div>
+        </section>
 
-      <div class="lower-grid">
         <section class="panel">
           <div class="section-heading">
             <div>
@@ -501,6 +656,19 @@
             <div class="date" id="weekRange"></div>
           </div>
           <div id="weekList" class="task-list"></div>
+        </section>
+      </div>
+
+      <div class="lower-grid">
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <h2>이번 달</h2>
+              <div class="section-note">현재 월에 해야 할 일</div>
+            </div>
+            <div class="date" id="monthLabel"></div>
+          </div>
+          <div id="monthList" class="task-list"></div>
         </section>
 
         <section class="panel">
@@ -514,32 +682,6 @@
           <div id="yearList" class="task-list"></div>
         </section>
       </div>
-    </div>
-
-    <div id="noDuePage" class="page">
-      <button class="btn back" onclick="openPage('dashboardPage')">← 메인으로</button>
-      <section class="panel">
-        <div class="section-heading">
-          <div>
-            <h2>기한 없음</h2>
-            <div class="section-note">날짜를 정하지 않은 일을 관리합니다.</div>
-          </div>
-        </div>
-        <div id="noDueList" class="task-list"></div>
-      </section>
-    </div>
-
-    <div id="completedPage" class="page">
-      <button class="btn back" onclick="openPage('dashboardPage')">← 메인으로</button>
-      <section class="panel">
-        <div class="section-heading">
-          <div>
-            <h2>완료 목록</h2>
-            <div class="section-note">완료한 일을 날짜별로 확인합니다.</div>
-          </div>
-        </div>
-        <div id="completedList"></div>
-      </section>
     </div>
   </main>
 
@@ -555,7 +697,7 @@
       <div class="field">
         <label for="taskDate">마감일</label>
         <input id="taskDate" type="date" />
-        <div class="section-note">날짜를 비워두면 '기한 없음'으로 관리됩니다.</div>
+        <div class="section-note">날짜를 비워두면 오늘 할 일로 등록됩니다.</div>
       </div>
 
       <div class="field">
@@ -644,6 +786,12 @@
       return date >= start && date <= end;
     }
 
+    function isWithinMonth(date, base) {
+      return date &&
+        date.getFullYear() === base.getFullYear() &&
+        date.getMonth() === base.getMonth();
+    }
+
     function isWithinYear(date, base) {
       return date && date.getFullYear() === base.getFullYear();
     }
@@ -661,6 +809,14 @@
     function formatShortDate(date) {
       if (!date) return "";
       return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+
+    function formatDeadline(date) {
+      if (!date) return "";
+      const y = String(date.getFullYear()).slice(-2);
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}.${m}.${d}`;
     }
 
     function formatTime(time) {
@@ -697,47 +853,65 @@
       return list;
     }
 
-    function render() {
-      const today = dateOnly(new Date());
+    let viewDate = dateOnly(new Date());
 
-      document.getElementById("todayDate").textContent = formatDate(today);
+    const lunchMenus = [
+      "김치찌개", "제육볶음", "돈까스", "비빔밥", "순두부찌개",
+      "쌀국수", "초밥", "냉면", "칼국수", "카레",
+      "닭갈비", "부대찌개", "마라탕", "샤브샤브", "덮밥",
+      "국밥", "파스타", "햄버거", "김밥 + 라면", "중식"
+    ];
+
+    function recommendLunch() {
+      const el = document.getElementById("lunchMenu");
+      if (!el) return;
+      const current = el.textContent;
+      const candidates = lunchMenus.filter(menu => menu !== current);
+      const menu = candidates[Math.floor(Math.random() * candidates.length)];
+      el.textContent = menu;
+    }
+
+    function render() {
+      const today = viewDate;
+
+      const todayDateInput = document.getElementById("todayDate");
+      todayDateInput.value = toDateString(today);
+      document.getElementById("monthLabel").textContent = `${today.getMonth() + 1}월`;
       document.getElementById("yearLabel").textContent = `${today.getFullYear()}년`;
       document.getElementById("weekRange").textContent =
         `${formatShortDate(startOfWeek(today))} – ${formatShortDate(endOfWeek(today))}`;
 
+      // 오늘 날짜의 할 일은 완료 여부와 관계없이 계속 오늘 영역에 남깁니다.
       const todayTasks = tasks.filter(t => {
         if (!t.dueDate) return false;
-        const due = parseDate(t.dueDate);
-
-        // 완료된 과거 일정은 메인에서 숨기고 완료 목록으로 보냅니다.
-        if (t.completed && !isSameDay(due, today)) return false;
-
-        // 오늘 날짜가 된 일은 오늘 영역으로 이동합니다.
-        return isSameDay(due, today);
+        return isSameDay(parseDate(t.dueDate), today);
       });
 
+      // 이번 주에는 오늘을 제외한 미완료 일정만 표시합니다.
       const weekTasks = tasks.filter(t => {
         if (!t.dueDate || t.completed) return false;
         const due = parseDate(t.dueDate);
-
-        // 오늘에 해당하는 일은 오늘 영역에서만 표시합니다.
         return isWithinWeek(due, today) && !isSameDay(due, today);
       });
 
+      // 이번 달에는 이번 주를 제외한 미완료 일정만 표시합니다.
+      const monthTasks = tasks.filter(t => {
+        if (!t.dueDate || t.completed) return false;
+        const due = parseDate(t.dueDate);
+        return isWithinMonth(due, today) && !isWithinWeek(due, today);
+      });
+
+      // 올해에는 이번 달을 제외한 미완료 일정만 표시합니다.
       const yearTasks = tasks.filter(t => {
         if (!t.dueDate || t.completed) return false;
         const due = parseDate(t.dueDate);
-
-        // 이번 주에 들어온 일은 이번 주 영역으로 넘어갑니다.
-        return isWithinYear(due, today) && !isWithinWeek(due, today);
+        return isWithinYear(due, today) && !isWithinMonth(due, today);
       });
 
       renderTaskList("todayList", sortTasks(todayTasks), true);
       renderTaskList("weekList", sortTasks(weekTasks), true);
+      renderTaskList("monthList", sortTasks(monthTasks), true);
       renderTaskList("yearList", sortTasks(yearTasks), true);
-
-      renderNoDue();
-      renderCompleted();
       renderProgress(todayTasks);
     }
 
@@ -766,7 +940,7 @@
           <div class="task-title">${escapeHTML(task.title)}</div>
 
           <div class="task-meta">
-            ${showDate && due ? `<span class="deadline">${formatShortDate(due)}${task.dueTime ? ` · ${formatTime(task.dueTime)}` : ""}</span>` : ""}
+            ${showDate && due ? `<span class="deadline-label">${formatDeadline(due)}</span>${task.dueTime ? `<span class="deadline-time"> · ${formatTime(task.dueTime)}</span>` : ""}` : ""}
             <button
               class="star ${task.isImportant ? "important" : ""}"
               aria-label="중요 표시"
@@ -782,43 +956,45 @@
       `;
     }
 
-    function renderNoDue() {
-      const list = sortTasks(tasks.filter(t => !t.dueDate && !t.completed));
-      renderTaskList("noDueList", list, false);
-    }
-
-    function renderCompleted() {
-      const el = document.getElementById("completedList");
-      const completed = tasks
-        .filter(t => t.completed)
-        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
-
-      if (!completed.length) {
-        el.innerHTML = '<div class="empty">완료한 일이 없습니다.</div>';
-        return;
-      }
-
-      // 완료 목록은 완료된 날짜를 기준으로 묶습니다.
-      const groups = {};
-      completed.forEach(task => {
-        const key = new Date(task.completedAt).toLocaleDateString("ko-KR");
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(task);
-      });
-
-      el.innerHTML = Object.entries(groups).map(([date, list]) => `
-        <div class="completed-date">${date}</div>
-        <div class="task-list">
-          ${list.map(task => taskHTML(task, false)).join("")}
-        </div>
-      `).join("");
-    }
-
     function renderProgress(todayTasks) {
       const total = todayTasks.length;
       const done = todayTasks.filter(t => t.completed).length;
       const percent = total ? Math.round(done / total * 100) : 0;
       document.getElementById("progressBar").style.width = `${percent}%`;
+    }
+
+    function resetToToday() {
+      viewDate = dateOnly(new Date());
+      render();
+    }
+
+    function changeTodayDateFromCalendar(value) {
+      if (!value) return;
+
+      const selected = parseDate(value);
+      if (!selected || Number.isNaN(selected.getTime())) {
+        render();
+        return;
+      }
+
+      viewDate = dateOnly(selected);
+      render();
+    }
+
+    function changeTaskDateFromCalendar(id, value) {
+      const task = tasks.find(t => t.id === id);
+      if (!task || !value) return;
+
+      const selected = parseDate(value);
+      if (!selected || Number.isNaN(selected.getTime())) {
+        render();
+        return;
+      }
+
+      task.dueDate = value;
+      task.updatedAt = new Date().toISOString();
+      saveTasks();
+      render();
     }
 
     function toggleTask(id) {
@@ -887,8 +1063,13 @@
 
     function saveTask() {
       const title = document.getElementById("taskTitle").value.trim();
-      const dueDate = document.getElementById("taskDate").value;
+      let dueDate = document.getElementById("taskDate").value;
       const dueTime = document.getElementById("taskTime").value;
+
+      // 이름만 입력하고 Enter/저장을 누르면 오늘 할 일로 등록합니다.
+      if (!dueDate) {
+        dueDate = toDateString(viewDate);
+      }
       const isImportant = document.getElementById("taskImportant").checked;
 
       if (!title) {
@@ -940,12 +1121,18 @@
         .replaceAll("'", "&#039;");
     }
 
+    // 오늘 날짜를 달력에서 선택하면 해당 날짜를 조회합니다.
+    document.getElementById("todayDate").addEventListener("change", event => {
+      changeTodayDateFromCalendar(event.target.value);
+    });
+
     // Enter 키로 빠르게 저장할 수 있도록 합니다.
     document.getElementById("taskTitle").addEventListener("keydown", event => {
       if (event.key === "Enter") saveTask();
     });
 
     render();
+    recommendLunch();
   </script>
 </body>
 </html>
