@@ -210,26 +210,6 @@
       background: #eef0f2;
     }
 
-    .deadline-date-input {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      font: inherit;
-      font-size: .78rem;
-      padding: 2px 3px;
-      border-radius: 6px;
-      cursor: pointer;
-      width: 88px;
-      max-width: 88px;
-      font-size: .72rem;
-      padding: 2px 1px;
-    }
-
-    .deadline-date-input:hover {
-      background: #eef0f2;
-      color: var(--text);
-    }
-
     .deadline-time {
       white-space: nowrap;
     }
@@ -266,6 +246,7 @@
     }
 
     .task {
+      position: relative;
       display: grid;
       grid-template-columns: auto 1fr auto;
       align-items: center;
@@ -392,28 +373,70 @@
       font-size: .92rem;
     }
 
-    .deadline {
-      color: var(--muted);
-      font-size: .78rem;
-    }
-
-    .date-edit-btn:hover {
-      background: #eef0f2;
-      color: var(--text);
-    }
-
     .section-note {
       color: var(--muted);
       font-size: .78rem;
       margin-top: 3px;
     }
 
-    /* 하단 보조 네비게이션 */
-    .subnav {
+    /* 완료 일정 */
+    .completed-toggle {
+      margin-top: 12px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 700;
+      padding: 5px 2px;
+      cursor: pointer;
+    }
+
+    .completed-toggle:hover {
+      color: var(--text);
+    }
+
+    .completed-list {
+      display: none;
+      margin-top: 5px;
+    }
+
+    .completed-list.open {
       display: flex;
-      gap: 8px;
+    }
+
+    /* 기한 없음 페이지 */
+    .no-deadline-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .no-deadline-header h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: -0.03em;
+    }
+
+    .page-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .no-deadline-count {
+      color: var(--muted);
+      font-size: .85rem;
+      font-weight: 700;
+    }
+
+    .no-deadline-nav {
       margin-top: 18px;
-      flex-wrap: wrap;
+      display: flex;
+      justify-content: flex-end;
     }
 
     /* 모달 */
@@ -540,11 +563,6 @@
         min-width: 175px;
       }
 
-      .deadline-date-input {
-        width: 82px;
-        max-width: 82px;
-      }
-
       .btn {
         padding: 9px 11px;
         font-size: .85rem;
@@ -580,8 +598,17 @@
       }
 
       .task-actions {
+        opacity: 1;
         position: absolute;
-        right: 10px;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,.92);
+        border-radius: 8px;
+      }
+
+      .task-title {
+        padding-right: 54px;
       }
     }
 
@@ -625,6 +652,7 @@
             <div class="lunch-card-menu" id="lunchMenu">메뉴를 골라볼까요?</div>
             <button class="lunch-refresh" onclick="recommendLunch()" title="다른 메뉴 추천">↻</button>
           </div>
+          <button class="btn" onclick="openPage('noDeadlinePage')">기한 없음 <span id="noDeadlineBadge"></span></button>
           <button class="btn primary" onclick="openTaskModal()">+ 할 일 추가</button>
         </div>
       </header>
@@ -683,6 +711,31 @@
         </section>
       </div>
     </div>
+
+    <div id="noDeadlinePage" class="page">
+      <div class="no-deadline-header">
+        <div>
+          <h2>기한 없음</h2>
+          <div class="section-note">날짜를 정하지 않고 관리할 할 일</div>
+        </div>
+        <button class="btn" onclick="openPage('dashboardPage')">← 돌아가기</button>
+      </div>
+
+      <section class="page-panel">
+        <div class="section-heading">
+          <div>
+            <h2>기한 없음 목록</h2>
+            <div class="section-note">‘기한 없음’을 직접 체크한 일정만 이곳에 표시됩니다.</div>
+          </div>
+          <div class="no-deadline-count" id="noDeadlineCount"></div>
+        </div>
+        <div id="noDeadlineList" class="task-list"></div>
+      </section>
+
+      <div class="no-deadline-nav">
+        <button class="btn primary" onclick="openTaskModal()">+ 할 일 추가</button>
+      </div>
+    </div>
   </main>
 
   <div id="taskModal" class="modal-backdrop" onclick="handleBackdrop(event)">
@@ -697,7 +750,15 @@
       <div class="field">
         <label for="taskDate">마감일</label>
         <input id="taskDate" type="date" />
-        <div class="section-note">날짜를 비워두면 오늘 할 일로 등록됩니다.</div>
+        <div class="section-note">날짜를 입력하지 않고 저장하면 오늘 날짜로 등록됩니다.</div>
+      </div>
+
+      <div class="field">
+        <label class="important-row">
+          <input id="taskNoDeadline" type="checkbox" onchange="toggleNoDeadlineField()" />
+          <span>기한 없음</span>
+        </label>
+        <div class="section-note">체크한 일정은 날짜와 관계없이 ‘기한 없음’ 목록에서 관리됩니다.</div>
       </div>
 
       <div class="field">
@@ -730,10 +791,16 @@
     const STORAGE_KEY = "personal-todo-mvp-v1";
     let tasks = loadTasks();
     let editingTaskId = null;
+    let showCompletedToday = false;
 
     function loadTasks() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!Array.isArray(data)) return [];
+        return data.map(task => ({
+          ...task,
+          noDeadline: Boolean(task.noDeadline)
+        }));
       } catch {
         return [];
       }
@@ -855,11 +922,39 @@
 
     let viewDate = dateOnly(new Date());
 
+    // 직장인 평일 점심으로 고르기 좋은 메뉴를 중심으로 구성합니다.
     const lunchMenus = [
-      "김치찌개", "제육볶음", "돈까스", "비빔밥", "순두부찌개",
-      "쌀국수", "초밥", "냉면", "칼국수", "카레",
-      "닭갈비", "부대찌개", "마라탕", "샤브샤브", "덮밥",
-      "국밥", "파스타", "햄버거", "김밥 + 라면", "중식"
+      // 한식
+      "김치찌개", "제육볶음", "순두부찌개", "된장찌개", "비빔밥",
+      "부대찌개", "닭갈비", "불고기", "오징어볶음", "김치찜",
+      "보쌈", "돼지불백", "고등어구이", "생선구이", "청국장",
+
+      // 국밥·탕·찌개
+      "돼지국밥", "순대국", "소고기국밥", "콩나물국밥", "설렁탕",
+      "갈비탕", "육개장", "감자탕", "추어탕", "곰탕",
+
+      // 면류
+      "냉면", "비빔냉면", "칼국수", "잔치국수", "막국수",
+      "쌀국수", "우동", "소바", "라멘", "짬뽕",
+
+      // 중식·아시안
+      "짜장면", "탕수육", "마라탕", "마라샹궈", "탄탄면",
+      "팟타이", "볶음밥", "중식 덮밥",
+
+      // 일식
+      "돈까스", "치즈돈까스", "규동", "오야코동", "카츠동",
+      "연어덮밥", "회덮밥", "초밥", "우동 + 돈까스", "텐동",
+
+      // 덮밥·간편식
+      "소불고기덮밥", "제육덮밥", "참치마요덮밥", "카레라이스",
+      "오므라이스", "닭갈비덮밥", "김밥 + 라면", "김밥 + 떡볶이",
+
+      // 가벼운 점심
+      "샐러드", "포케", "샌드위치", "닭가슴살 샐러드", "랩 샌드위치",
+
+      // 양식·패스트푸드
+      "파스타", "리조또", "피자", "햄버거", "샌드위치 + 수프",
+      "찜닭", "샤브샤브"
     ];
 
     function recommendLunch() {
@@ -881,38 +976,80 @@
       document.getElementById("weekRange").textContent =
         `${formatShortDate(startOfWeek(today))} – ${formatShortDate(endOfWeek(today))}`;
 
-      // 오늘 날짜의 할 일은 완료 여부와 관계없이 계속 오늘 영역에 남깁니다.
-      const todayTasks = tasks.filter(t => {
-        if (!t.dueDate) return false;
-        return isSameDay(parseDate(t.dueDate), today);
-      });
+      const datedTasks = tasks.filter(t => !t.noDeadline && t.dueDate);
+      const todayTasks = datedTasks.filter(t => isSameDay(parseDate(t.dueDate), today));
 
       // 이번 주에는 오늘을 제외한 미완료 일정만 표시합니다.
-      const weekTasks = tasks.filter(t => {
-        if (!t.dueDate || t.completed) return false;
+      const weekTasks = datedTasks.filter(t => {
+        if (t.completed) return false;
         const due = parseDate(t.dueDate);
         return isWithinWeek(due, today) && !isSameDay(due, today);
       });
 
       // 이번 달에는 이번 주를 제외한 미완료 일정만 표시합니다.
-      const monthTasks = tasks.filter(t => {
-        if (!t.dueDate || t.completed) return false;
+      const monthTasks = datedTasks.filter(t => {
+        if (t.completed) return false;
         const due = parseDate(t.dueDate);
         return isWithinMonth(due, today) && !isWithinWeek(due, today);
       });
 
       // 올해에는 이번 달을 제외한 미완료 일정만 표시합니다.
-      const yearTasks = tasks.filter(t => {
-        if (!t.dueDate || t.completed) return false;
+      const yearTasks = datedTasks.filter(t => {
+        if (t.completed) return false;
         const due = parseDate(t.dueDate);
         return isWithinYear(due, today) && !isWithinMonth(due, today);
       });
 
-      renderTaskList("todayList", sortTasks(todayTasks), true);
+      renderTaskList("todayList", sortTasks(todayTasks.filter(t => !t.completed)), false);
+
+      const completedToday = sortTasks(todayTasks.filter(t => t.completed));
+      renderCompletedToday(completedToday);
+
       renderTaskList("weekList", sortTasks(weekTasks), true);
       renderTaskList("monthList", sortTasks(monthTasks), true);
       renderTaskList("yearList", sortTasks(yearTasks), true);
+
+      const noDeadlineTasks = sortTasks(tasks.filter(t => t.noDeadline && !t.completed));
+      renderTaskList("noDeadlineList", noDeadlineTasks, false);
+      document.getElementById("noDeadlineCount").textContent =
+        `${noDeadlineTasks.length}개`;
+      document.getElementById("noDeadlineBadge").textContent =
+        noDeadlineTasks.length ? `(${noDeadlineTasks.length})` : "";
+
       renderProgress(todayTasks);
+    }
+
+    function renderCompletedToday(list) {
+      const container = document.getElementById("todayList");
+      let wrapper = document.getElementById("completedTodaySection");
+
+      if (!wrapper) {
+        wrapper = document.createElement("div");
+        wrapper.id = "completedTodaySection";
+        container.parentElement.appendChild(wrapper);
+      }
+
+      if (!list.length) {
+        wrapper.innerHTML = "";
+        return;
+      }
+
+      wrapper.innerHTML = `
+        <button class="completed-toggle" onclick="toggleCompletedToday()">
+          ${showCompletedToday ? "완료한 일정 접기" : `완료한 일정 보기 (${list.length})`}
+        </button>
+        <div class="completed-list task-list ${showCompletedToday ? "open" : ""}" id="completedTodayList"></div>
+      `;
+
+      if (showCompletedToday) {
+        document.getElementById("completedTodayList").innerHTML =
+          list.map(task => taskHTML(task, false)).join("");
+      }
+    }
+
+    function toggleCompletedToday() {
+      showCompletedToday = !showCompletedToday;
+      render();
     }
 
     function renderTaskList(elementId, list, showDate) {
@@ -940,7 +1077,7 @@
           <div class="task-title">${escapeHTML(task.title)}</div>
 
           <div class="task-meta">
-            ${showDate && due ? `<span class="deadline-label">${formatDeadline(due)}</span>${task.dueTime ? `<span class="deadline-time"> · ${formatTime(task.dueTime)}</span>` : ""}` : ""}
+            ${showDate && due && !task.noDeadline ? `<span class="deadline-label">${formatDeadline(due)}</span>${task.dueTime ? `<span class="deadline-time"> · ${formatTime(task.dueTime)}</span>` : ""}` : ""}
             <button
               class="star ${task.isImportant ? "important" : ""}"
               aria-label="중요 표시"
@@ -981,22 +1118,6 @@
       render();
     }
 
-    function changeTaskDateFromCalendar(id, value) {
-      const task = tasks.find(t => t.id === id);
-      if (!task || !value) return;
-
-      const selected = parseDate(value);
-      if (!selected || Number.isNaN(selected.getTime())) {
-        render();
-        return;
-      }
-
-      task.dueDate = value;
-      task.updatedAt = new Date().toISOString();
-      saveTasks();
-      render();
-    }
-
     function toggleTask(id) {
       const task = tasks.find(t => t.id === id);
       if (!task) return;
@@ -1029,7 +1150,9 @@
       const modal = document.getElementById("taskModal");
       const title = document.getElementById("taskTitle");
       const date = document.getElementById("taskDate");
+      const time = document.getElementById("taskTime");
       const important = document.getElementById("taskImportant");
+      const noDeadline = document.getElementById("taskNoDeadline");
 
       if (id) {
         const task = tasks.find(t => t.id === id);
@@ -1037,19 +1160,40 @@
 
         document.getElementById("modalTitle").textContent = "할 일 수정";
         title.value = task.title;
-        date.value = task.dueDate || "";
-        document.getElementById("taskTime").value = task.dueTime || "";
+        date.value = task.noDeadline ? "" : (task.dueDate || toDateString(new Date()));
+        time.value = task.dueTime || "";
         important.checked = task.isImportant;
+        noDeadline.checked = Boolean(task.noDeadline);
       } else {
         document.getElementById("modalTitle").textContent = "할 일 추가";
         title.value = "";
-        date.value = "";
-        document.getElementById("taskTime").value = "";
+        // 새 일정의 기본 날짜는 항상 실제 오늘 날짜입니다.
+        date.value = toDateString(new Date());
+        time.value = "";
         important.checked = false;
+        noDeadline.checked = false;
       }
 
+      toggleNoDeadlineField();
       modal.classList.add("open");
       setTimeout(() => title.focus(), 0);
+    }
+
+    function toggleNoDeadlineField() {
+      const noDeadline = document.getElementById("taskNoDeadline");
+      const date = document.getElementById("taskDate");
+
+      if (noDeadline.checked) {
+        date.value = "";
+        date.disabled = true;
+        date.setAttribute("aria-disabled", "true");
+      } else {
+        date.disabled = false;
+        date.removeAttribute("aria-disabled");
+        if (!date.value) {
+          date.value = toDateString(new Date());
+        }
+      }
     }
 
     function closeTaskModal() {
@@ -1063,13 +1207,9 @@
 
     function saveTask() {
       const title = document.getElementById("taskTitle").value.trim();
+      const noDeadline = document.getElementById("taskNoDeadline").checked;
       let dueDate = document.getElementById("taskDate").value;
       const dueTime = document.getElementById("taskTime").value;
-
-      // 이름만 입력하고 Enter/저장을 누르면 오늘 할 일로 등록합니다.
-      if (!dueDate) {
-        dueDate = toDateString(viewDate);
-      }
       const isImportant = document.getElementById("taskImportant").checked;
 
       if (!title) {
@@ -1077,11 +1217,17 @@
         return;
       }
 
+      // 기한 없음이 아니라면 날짜 미지정 시 실제 오늘 날짜를 사용합니다.
+      if (!noDeadline && !dueDate) {
+        dueDate = toDateString(new Date());
+      }
+
       if (editingTaskId) {
         const task = tasks.find(t => t.id === editingTaskId);
         if (task) {
           task.title = title;
-          task.dueDate = dueDate || null;
+          task.noDeadline = noDeadline;
+          task.dueDate = noDeadline ? null : dueDate;
           task.dueTime = dueTime || null;
           task.isImportant = isImportant;
           task.updatedAt = new Date().toISOString();
@@ -1090,7 +1236,8 @@
         tasks.push({
           id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
           title,
-          dueDate: dueDate || null,
+          noDeadline,
+          dueDate: noDeadline ? null : dueDate,
           dueTime: dueTime || null,
           isImportant,
           completed: false,
@@ -1106,6 +1253,7 @@
     }
 
     function openPage(pageId) {
+      closeTaskModal();
       document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
       document.getElementById(pageId).classList.add("active");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1126,9 +1274,16 @@
       changeTodayDateFromCalendar(event.target.value);
     });
 
-    // Enter 키로 빠르게 저장할 수 있도록 합니다.
+    // Enter 키로 빠르게 저장하고, Escape 키로 모달을 닫을 수 있습니다.
     document.getElementById("taskTitle").addEventListener("keydown", event => {
       if (event.key === "Enter") saveTask();
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        const modal = document.getElementById("taskModal");
+        if (modal.classList.contains("open")) closeTaskModal();
+      }
     });
 
     render();
